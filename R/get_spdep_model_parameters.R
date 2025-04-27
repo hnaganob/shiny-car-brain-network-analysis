@@ -5,7 +5,7 @@ get_spdep_model_parameters <- function(time = NULL, sp_data, listw) {
   }
   
   # Initialize containers
-  intercept <- intercept_se <- lambda <- lambda_se <- lambda_p_value <- sigma2 <- numeric(length(time))
+  intercept <- intercept_se <- intercept_p_value <-  lambda <- lambda_se <- lambda_p_value <- sigma2 <- numeric(length(time))
   
   # Add progress bar
   pb <- txtProgressBar(min = 0, max = length(time), style = 3)
@@ -17,6 +17,7 @@ get_spdep_model_parameters <- function(time = NULL, sp_data, listw) {
     
     intercept[frame] <- model$fit$coefficients
     intercept_se[frame] <- model_summary$rest.se
+    intercept_p_value[frame] <- model_summary$Coef[1, "Pr(>|z|)"]
     sigma2[frame] <- model$fit$s2
     lambda[frame] <- model$lambda
     lambda_se[frame] <- model$lambda.se
@@ -27,7 +28,14 @@ get_spdep_model_parameters <- function(time = NULL, sp_data, listw) {
   
   close(pb)  # close the progress bar
   
-  significance_code <- symnum(
+  intercept_significance_code <- symnum(
+    intercept_p_value,
+    corr = FALSE, na = FALSE,
+    cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+    symbols = c("***", "**", "*", ".", " ")
+  )
+  
+  lambda_significance_code <- symnum(
     lambda_p_value,
     corr = FALSE, na = FALSE,
     cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
@@ -36,9 +44,9 @@ get_spdep_model_parameters <- function(time = NULL, sp_data, listw) {
 
   parameter_table <- data.frame(
     time, 
-    intercept, intercept_se, 
+    intercept, intercept_se, intercept_significance_code,
     sigma2,
-    lambda, lambda_se, lambda_p_value, significance_code
+    lambda, lambda_se, lambda_p_value, lambda_significance_code
   )
   
   return(parameter_table)

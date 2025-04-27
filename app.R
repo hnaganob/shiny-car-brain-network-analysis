@@ -22,7 +22,7 @@ library(shiny)
 library(bslib)
 
 ui <- fluidPage(
-    # theme = bs_theme(version = 5,bootswatch = "darkly"),
+    # theme = bs_theme(version = 5,bootswatch = "lumen"),
     
     titlePanel("Brain Network Analysis: Markov Random Fields"),
     
@@ -68,8 +68,7 @@ ui <- fluidPage(
             tags$footer(
                 class = "footer",
                 style = "padding: 10px; text-align: center; color: gray;",
-                HTML("Built by <a href='https://www.linkedin.com/in/hnaganob/' target='_blank'>Hiroki Naganobori</a><br/>
-Ph.D. Candidate @ Indiana University")
+                HTML("Built by <a href='https://www.linkedin.com/in/hnaganob/' target='_blank'>Hiroki Naganobori</a><br/>Indiana University")
             )
         ),
         

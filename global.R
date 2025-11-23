@@ -5,15 +5,15 @@ library(network)
 library(bslib) # nice shiny
 # library(viridis) # colorblind-friendly colors
 
-source("R/get_spdep_model_parameters.R")
+# source("R/get_spdep_model_parameters.R")
 source("R/plot_lambda_with_se.R")
 source("R/plot_network_signal.R")
 source("R/add_colorbar.R")
-source("R/plot_correlation_ij.R")
+# source("R/plot_correlation_ij.R")
 
 
 # load data ----
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # bold_raw <- read.csv("data/BOLD.csv")
 # dti_raw <- read.csv("data/DTI.csv")
 
@@ -28,16 +28,12 @@ dti <- as.matrix(read.csv("data/M_nf.csv", header = FALSE)) # 68 x 68
 roi_table <- read.csv("data/roi.csv", header = TRUE) # 68 x 8
 
 
-
-
-
-
 # process network data ----
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# ~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~
 # signal
-# ~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~
 # bold signal time
 time <- seq(2, 480, by = 2) # TR = 2 sec
 
@@ -51,10 +47,9 @@ n_time <- length(time)
 signal <- ts(t(signal), start = 2, end = 480, deltat = 2)
 colnames(signal) <- roi_table$Code.Full
 
-
-# ~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~
 # dti
-# ~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~
 # convert data structure to matrix
 rownames(dti) <- colnames(dti) <- colnames(signal)
 
@@ -68,31 +63,33 @@ diag(adj_dti) <- 0
 # heatmap(adj_dti, Rowv = NA, symm = TRUE)
 # # isSymmetric(adj_dti)  # TRUE
 
-# convert to a spatial weights list ----
+# convert to a spatial weights list
 listw <- mat2listw(adj_dti, style = "B", zero.policy = TRUE) # "B" keeps binary structure
 
+#~~~~~~~~~~~~~~~~~~
+# network
+#~~~~~~~~~~~~~~~~~~
+net <- network(adj_dti, directed = FALSE)
+edgelist <- as.matrix(net, matrix.type = "edgelist")
+set.seed(50)
+coord <- network.layout.fruchtermanreingold(net, NULL)
 
 
+# prepare network plot parameters ----
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# vertex colors
+color_ramp <- c("darkblue", "blue", "white", "orange", "darkorange")
+
+# colorbar
+y_range <- c(-5, 5)
+colorbar_seq <- seq(y_range[1], y_range[2], length = 101)
+colorbar_range <- y_range
 
 
-# # prepare spdep model parameter table ----
-# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-model_parameter_table <- read.csv("output/model_parameter_table.csv", header = TRUE)
+# prepare spdep model parameter table ----
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+model_parameter_table <- read.csv("data/model_parameter_table.csv", header = TRUE)
 
-# folder <- "output"
-# filename <- paste0(folder, "/model_parameter_table.csv")
-# 
-# if (length(list.files(folder)) != 0) {
-#   # load spdep model parameter table
-  # model_parameter_table <- read.csv(filename, header = TRUE)
-# } else {
-#   # make spdep model parameter table
-  # model_parameter_table <- get_spdep_model_parameters(
-#     time = time,
-#     sp_data = scale(signal),
-#     listw = listw
-#   )
-#   # save spdep model parameter table in output folder
-#   dir.create(folder)
-#   write.csv(model_parameter_table, filename, row.names = FALSE)
-# }
+# prepare lambdas & p-values
+lambda <- model_parameter_table$lambda
+lambda_p_value <- model_parameter_table$lambda_p_value
